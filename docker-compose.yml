@@ -152,6 +152,10 @@ services:
       dockerfile: ./Dockerfile
     env_file:
       - .env
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    privileged: true
     environment:
       - PYTHONUNBUFFERED=0
       - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
@@ -175,6 +179,8 @@ services:
     networks:
       ric_network:
         ipv4_address: ${XAPP_PY_RUNNER_IP:-10.0.2.20}
+      ran:
+        ipv4_address: ${XAPP_PY_RUNNER_IP2:-10.53.1.20}
 
 networks:
   ric_network:
@@ -182,3 +188,7 @@ networks:
       driver: default
       config:
         - subnet: 10.0.2.0/24
+  ran:
+    name : docker_ran
+    external: true
+  

@@ -1,8 +1,11 @@
-FROM python:3.8-slim as stretch
+FROM python:3.9-slim as stretch
 
 RUN apt-get clean -y && apt-get update -y && \
     apt-get install -y git wget curl less nano \
-    nmap mtr net-tools tcpdump apt-utils sudo jq tree iproute2 iputils-ping traceroute
+    nmap mtr net-tools tcpdump apt-utils sudo jq tree iproute2 iputils-ping traceroute \
+    libpcap-dev libusb-dev \
+    tshark
+
 
 # Install RMR
 ARG RMR_VERSION=4.9.4
@@ -20,10 +23,13 @@ RUN wget --content-disposition ${E2AP_LIB_URL} && dpkg -i riclibe2ap_${E2AP_VERS
 RUN wget --content-disposition ${E2AP_DEV_URL} && dpkg -i riclibe2ap-dev_${E2AP_VERSION}_amd64.deb
 RUN rm -f riclibe2ap_${E2AP_VERSION}_amd64.deb riclibe2ap-dev_${E2AP_VERSION}_amd64.deb
 
-FROM python:3.8-slim
+FROM python:3.9-slim
 
 RUN apt-get clean -y && apt-get update -y && \
-    apt-get install -y git wget curl less nano
+    apt-get install -y git wget curl less nano \
+    libpcap-dev libusb-dev \
+    tshark
+    
 
 ARG RMR_VERSION=4.9.4
 ARG E2AP_VERSION=1.1.0
@@ -34,8 +40,11 @@ COPY --from=stretch /usr/local/bin/rmr_probe /opt/e2/rmr_probe
 RUN chmod -R 755 /usr/local/lib/librmr_si.so
 RUN chmod -R 755 /usr/local/lib/libriclibe2ap.so
 
+
 # Install required Python modules
-RUN pip install --upgrade pip && pip install certifi six python_dateutil setuptools urllib3 logger requests inotify_simple mdclogpy google-api-python-client msgpack ricsdl asn1tools
+RUN pip install --upgrade pip && pip install certifi six python_dateutil setuptools urllib3 logger requests inotify_simple mdclogpy google-api-python-client msgpack ricsdl asn1tools && \
+    pip install --no-cache-dir tensorflow==2.7.1 scikit-learn h5py pyshark protobuf==3.19.6 numpy==1.21.0
+
 
 RUN mkdir -p /opt/xApps && chmod -R 755 opt/xApps
 RUN mkdir -p /opt/ric/config && chmod -R 755 /opt/ric/config
