@@ -182,6 +182,41 @@ services:
       ran:
         ipv4_address: ${XAPP_PY_RUNNER_IP2:-10.53.1.20}
 
+  lucid:
+    container_name: lucid
+    hostname: lucid
+    image: python_xapp_runner:${SC_RIC_VERSION}
+    build:
+      context: ./ric/images/ric-plt-xapp-frame-py
+      dockerfile: ./Dockerfile
+    env_file:
+      - .env
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    privileged: true
+    environment:
+      - PYTHONUNBUFFERED=0
+      - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+      - RMR_SEED_RT=/opt/ric/config/uta-rtg.rt
+      - RMR_SRC_ID=${XAPP_PY_RUNNER_IP}
+      - RMR_RTG_SVC # leave empty, so RMR works correctly with RT Manager Simulator
+    stdin_open: true
+    tty: true
+    entrypoint: [/bin/bash]
+    volumes:
+      - type: bind
+        source: ./ric/configs/routes.rtg
+        target: /opt/ric/config/uta-rtg.rt
+      - type: bind
+        source: ./xApps/python
+        target: /opt/xApps
+      # Uncomment if you want to use your local ric-plt-xapp-frame-py copy inside the container
+      #- type: bind
+      #  source: ./Path/to/your/local/ric-plt-xapp-frame-py
+      #  target: /opt/ric-plt-xapp-frame-py
+    network_mode: host
+
 networks:
   ric_network:
     ipam:

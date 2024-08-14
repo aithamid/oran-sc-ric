@@ -43,7 +43,7 @@ RUN chmod -R 755 /usr/local/lib/libriclibe2ap.so
 
 # Install required Python modules
 RUN pip install --upgrade pip && pip install certifi six python_dateutil setuptools urllib3 logger requests inotify_simple mdclogpy google-api-python-client msgpack ricsdl asn1tools && \
-    pip install --no-cache-dir tensorflow==2.7.1 scikit-learn h5py pyshark protobuf==3.19.6 numpy==1.21.0
+    pip install --no-cache-dir tensorflow==2.7.1 scikit-learn h5py pyshark protobuf==3.19.6 numpy==1.21.0 tensorflow-gpu
 
 
 RUN mkdir -p /opt/xApps && chmod -R 755 opt/xApps
