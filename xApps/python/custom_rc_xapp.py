@@ -4,6 +4,8 @@ import time
 import datetime
 import argparse
 import signal
+import csv
+import pprint
 from lib.xAppBase import xAppBase
 
 class UE:
@@ -24,12 +26,26 @@ ue_dict = {
     virtual.ip: virtual
 }
 
+OUTPUT_FOLDER = "./output/"
+RC_HEADER = ['Time', 'Attack/Restore', 'IP', 'PRB']
+
 file_path = "attackers.txt"
+
+DECREASE = 5
+INCREASE = 100
 
 class MyXapp(xAppBase):
     def __init__(self, config, http_server_port, rmr_port):
         self.old_attackers = []
         self.attackers = []
+
+        # CSV Output file
+        self.history_file = open(OUTPUT_FOLDER + 'resourcecontrol-' + time.strftime("%Y%m%d-%H%M%S") + '.csv', 'a', newline='')
+        self.history_file.truncate(0)  # clean the file content (as we open the file in append mode)
+        self.history_writer = csv.DictWriter(self.history_file, fieldnames=RC_HEADER)
+        self.history_writer.writeheader()
+        self.history_file.flush()
+
         super(MyXapp, self).__init__(config, http_server_port, rmr_port)
         pass
 
@@ -52,25 +68,40 @@ class MyXapp(xAppBase):
             
             with open(file_path, 'r') as file:
                 file = file.readlines()
-
                 if len(file) == 0:
                     print("\033[33mNo attackers detected.\033[0m")
                 else:
-                    print("\033[31mAttackers detected with IP addresses:\033[0m")
                     for line in file:
                         ip = line.strip()
-                        print(f"\033[31m{ip}\033[0m")
                         if ip in ue_dict:
                             self.attackers.append(ip)
 
             for attacker_ip in self.attackers:
-                self.change_resources(attacker_ip, 5)
+                if attacker_ip not in self.old_attackers:
+                    row = {
+                        'Time':time.strftime("%D %T"),
+                        'Attack/Restore':"Attack",
+                        'IP':attacker_ip,
+                        'PRB':DECREASE
+                    }
+                    self.history_writer.writerow(row)
+                    self.history_file.flush()
+                    pprint.pprint(row, sort_dicts=False)
+                    print(f"\033[31mAttackers detected with IP address {attacker_ip}:\033[0m")
+                    self.change_resources(attacker_ip, DECREASE)
                 
-            if len(self.old_attackers) > 0:
-                for old_attacker in self.old_attackers:
-                    if old_attacker not in self.attackers:
-                        print("\033[35mRestoring resources for previously detected attackers.\033[0m")
-                        self.change_resources(old_attacker, 100)
+            for old_attacker in self.old_attackers:
+                if old_attacker not in self.attackers:
+                    row = {
+                        'Time':time.strftime("%D %T"),
+                        'Attack/Restore':"Restore",
+                        'IP':attacker_ip,
+                        'PRB':INCREASE
+                    }
+                    self.history_writer.writerow(row)
+                    self.history_file.flush()
+                    print("\033[35mRestoring resources for previously detected attackers.\033[0m")
+                    self.change_resources(old_attacker, INCREASE)
 
             time.sleep(1)
 
