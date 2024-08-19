@@ -77,6 +77,7 @@ class MyXapp(xAppBase):
                             self.attackers.append(ip)
 
             for attacker_ip in self.attackers:
+                self.change_resources(attacker_ip, DECREASE)
                 if attacker_ip not in self.old_attackers:
                     row = {
                         'Time':time.strftime("%D %T"),
@@ -88,7 +89,6 @@ class MyXapp(xAppBase):
                     self.history_file.flush()
                     pprint.pprint(row, sort_dicts=False)
                     print(f"\033[31mAttackers detected with IP address {attacker_ip}:\033[0m")
-                    self.change_resources(attacker_ip, DECREASE)
                 
             for old_attacker in self.old_attackers:
                 if old_attacker not in self.attackers:
