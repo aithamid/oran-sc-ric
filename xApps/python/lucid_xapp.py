@@ -77,7 +77,8 @@ class AttackDetectionXapp(xAppBase):
                 # Filter attacker IPs based on prediction results
                 malicious_ips = set()
                 for i, pred in enumerate(Y_pred):
-                    if pred > 0.5 and keys[i][0].startswith('10.45.') :  # If the prediction is positive for DDoS
+                    print(pred)
+                    if pred > 0.9 and keys[i][0].startswith('10.45.') :  # If the prediction is positive for DDoS
                         malicious_ips.add(keys[i][0])  # Add source IP of the malicious flow
 
                 self.report_process_results(np.squeeze(Y_true), Y_pred, packets, model_name_string, data_source, prediction_time, predict_writer, list(malicious_ips))
@@ -114,9 +115,9 @@ class AttackDetectionXapp(xAppBase):
                 'TPR': '{:05.4f}'.format(tpr), 'FPR': '{:05.4f}'.format(fpr), 'TNR': '{:05.4f}'.format(tnr), 'FNR': '{:05.4f}'.format(fnr),
                 'Source': data_source, 'Attackers': ', '.join(attacker_ips)}
             
-            if ddos_rate > 0.7 and accuracy > 0.7 and f1 > 0.7:
-                with open(output_file, 'w') as file:
-                    file.writelines(f"{ip}\n" for ip in attacker_ips)
+            #if ddos_rate > 0.7 and accuracy > 0.7 and f1 > 0.7:
+            if ddos_rate > 0.7:
+                self.write_attacker_ips_to_file(attacker_ips)
             else:
                 with open(output_file, 'w') as file:
                     pass
@@ -130,7 +131,7 @@ class AttackDetectionXapp(xAppBase):
                 pass
         pprint.pprint(row, sort_dicts=False)
         writer.writerow(row)
-        self.write_attacker_ips_to_file(attacker_ips)
+
            
     
 
